@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 	"time"
+	"encoding/json"
 )
 
 // Create a struct that holds information to be displayed in our HTML file
@@ -12,6 +13,19 @@ type Welcome struct {
 	Name string
 	Time string
 }
+
+type JsonResponse struct{
+	Value1 string `json:"key1"`
+	Value2 string `json:"key2"`
+	JsonNested JsonNested `json:"jsonNested"`
+}
+
+
+type JsonNested struct{
+	NestedValue1 string `json:"nestedkey1"`
+	NestedValue2 string `json:"nestedkey2"`
+}
+
 
 // Go application entrypoint
 func main() {
@@ -23,11 +37,21 @@ func main() {
 	// the relative path). We wrap it in a call to template.Must() which handles any errors and halts if there are fatal errors
 
 	templates := template.Must(template.ParseFiles("templates/welcome-template.html"))
+	
+	nested := JsonNested{
+		NestedValue1: "first nested val",
+		NestedValue2 : "second nested val",
+		JsonNested: nested,
+	}
 
+	jsonResp := JsonResponse{
+		Value1: "some Data",
+		Value2: "other data",
+	}
 	//Our HTML comes with CSS that go needs to provide when we run the app. Here we tell go to create
 	// a handle that looks in the static directory, go then uses the "/static/" as a url that our
 	//html can refer to when looking for our css and other files.
-
+	//fmt.Fprint("%+v\n\n\n\n", jsonResp)
 	http.Handle("/static/", //final url can be anything
 		http.StripPrefix("/static/",
 			http.FileServer(http.Dir("static")))) //Go looks in the relative "static" directory first using http.FileServer(), then matches it to a
@@ -52,6 +76,9 @@ func main() {
 
 	//Start the web server, set the port to listen to 8080. Without a path it assumes localhost
 	//Print any errors from starting the webserver using fmt
+	http.HandleFunc("/jsonResponse", func(w http.ResponseWriter, r *http.Request){
+		json.NewEncoder(w).Encode(jsonResp)
+	})
 	fmt.Println("Listening")
 	fmt.Println(http.ListenAndServe(":8080", nil))
 }
