@@ -14,23 +14,38 @@ type Welcome struct {
 	Time string
 }
 
-type JsonResponse struct{
+// type JsonResponse struct{
+// 	Value1 string `json:"key1"`
+// 	Value2 string `json:"key2"`
+// 	JsonNested JsonNested `json:"jsonNested"`
+// }
+// type JsonNested struct{
+// 	NestedValue1 string `json:"nestedkey1"`
+// 	NestedValue2 string `json:"nestedkey2"`
+// }
+
+type JsonContactInfo struct{
 	Value1 string `json:"key1"`
 	Value2 string `json:"key2"`
-	JsonNested JsonNested `json:"jsonNested"`
+	Value3 string `json:"key3"`
+	JsonNested JsonNested `json:"JsonNested"`
+	Value4 string `json:"key4"`
+	JsonNestedContactInfo JsonNestedContactInfo `json: "JsonNestedContactInfo"`
 }
-
-
 type JsonNested struct{
 	NestedValue1 string `json:"nestedkey1"`
 	NestedValue2 string `json:"nestedkey2"`
 }
 
+type JsonNestedContactInfo struct{
+	NestedValue3 string `json:"nestedkey3"`
+	NestedValue4 string `json:"nestedkey4"`
+}
+
 
 // Go application entrypoint
 func main() {
-	//Instantiate a Welcome struct object and pass in some random information.
-	//We shall get the name of the user as a query parameter from the URL
+
 	welcome := Welcome{"Anonymous", time.Now().Format(time.Stamp)}
 
 	//We tell Go exactly where we can find our html file. We ask Go to parse the html file (Notice
@@ -38,15 +53,34 @@ func main() {
 
 	templates := template.Must(template.ParseFiles("templates/welcome-template.html"))
 	
+	// nested := JsonNested{
+	// 	NestedValue1: "first nested val",
+	// 	NestedValue2 : "second nested val",
+	// 	JsonNested: nested,
+	// }
+
+	// jsonResp := JsonResponse{
+	// 	Value1: "some Data",
+	// 	Value2: "other data",
+	// }
+
 	nested := JsonNested{
-		NestedValue1: "first nested val",
-		NestedValue2 : "second nested val",
-		JsonNested: nested,
+		NestedValue1: "1234 Windbrook Lane",
+		NestedValue2 : "Sunnydale, Georgia",
 	}
 
-	jsonResp := JsonResponse{
-		Value1: "some Data",
-		Value2: "other data",
+	NestedContactInfo := JsonNestedContactInfo{
+		NestedValue3: "Email: windbrook123@gmail.com",
+		NestedValue4: "Phone: 706-123-4567",
+	}
+
+	jsonContactInfo := JsonContactInfo{
+		Value1: "FirstName: John",
+		Value2: "LastName: Smith",
+		Value3: "Address:",
+		JsonNested: nested,
+		Value4: "Contact Information:",
+		JsonNestedContactInfo: NestedContactInfo,
 	}
 	//Our HTML comes with CSS that go needs to provide when we run the app. Here we tell go to create
 	// a handle that looks in the static directory, go then uses the "/static/" as a url that our
@@ -55,9 +89,6 @@ func main() {
 	http.Handle("/static/", //final url can be anything
 		http.StripPrefix("/static/",
 			http.FileServer(http.Dir("static")))) //Go looks in the relative "static" directory first using http.FileServer(), then matches it to a
-	//url of our choice as shown in http.Handle("/static/"). This url is what we need when referencing our css files
-	//once the server begins. Our html code would therefore be <link rel="stylesheet"  href="/static/stylesheet/...">
-	//It is important to note the url in http.Handle can be whatever we like, so long as we are consistent.
 
 	//This method takes in the URL path "/" and a function that takes in a response writer, and a http request.
 	// **** THIS IS THE MAIN PATH /
@@ -74,11 +105,15 @@ func main() {
 		}
 	})
 
-	//Start the web server, set the port to listen to 8080. Without a path it assumes localhost
-	//Print any errors from starting the webserver using fmt
-	http.HandleFunc("/jsonResponse", func(w http.ResponseWriter, r *http.Request){
-		json.NewEncoder(w).Encode(jsonResp)
+
+	// http.HandleFunc("/jsonResponse", func(w http.ResponseWriter, r *http.Request){
+	// 	json.NewEncoder(w).Encode(jsonResp)
+	// })
+
+	http.HandleFunc("/jsonContactInfo", func(w http.ResponseWriter, r *http.Request){
+		json.NewEncoder(w).Encode(jsonContactInfo)
 	})
+
 	fmt.Println("Listening")
 	fmt.Println(http.ListenAndServe(":8080", nil))
 }
